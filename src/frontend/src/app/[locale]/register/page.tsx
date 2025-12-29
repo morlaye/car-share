@@ -1,25 +1,19 @@
 "use client";
 
-import { useState } from "react";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
-import { toast } from "sonner";
-import Link from "next/link";
-
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
@@ -35,31 +29,39 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-
-// Validation Schema
-const formSchema = z.object({
-    fullName: z.string().min(2, {
-        message: "Name must be at least 2 characters.",
-    }),
-    email: z.string().email({
-        message: "Please enter a valid email address.",
-    }),
-    phone: z.string().min(8, {
-        message: "Please enter a valid phone number.",
-    }),
-    password: z.string().min(6, {
-        message: "Password must be at least 6 characters.",
-    }),
-    confirmPassword: z.string(),
-    userType: z.string().default("Renter"),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-});
+import { useState } from "react";
+import { useRouter } from "@/i18n/routing";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 export default function RegisterPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const t = useTranslations('Auth');
+    const tVal = useTranslations('Validation');
+
+    // Validation Schema
+    const formSchema = z.object({
+        fullName: z.string().min(2, {
+            message: tVal('minChar', { min: 2 }),
+        }),
+        email: z.string().email({
+            message: tVal('email'),
+        }),
+        phone: z.string().min(8, {
+            message: tVal('minChar', { min: 8 }),
+        }),
+        password: z.string().min(6, {
+            message: tVal('minChar', { min: 6 }),
+        }),
+        confirmPassword: z.string(),
+        userType: z.string(),
+    }).refine((data) => data.password === data.confirmPassword, {
+        message: tVal('passwordMismatch'),
+        path: ["confirmPassword"],
+    });
 
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
@@ -89,7 +91,7 @@ export default function RegisterPage() {
                 countryCode: "GN" // Default to Guinea
             });
 
-            toast.success("Account created successfully!");
+            toast.success(t('successRegister'));
 
             // Redirect to login or dashboard
             setTimeout(() => {
@@ -98,7 +100,7 @@ export default function RegisterPage() {
 
         } catch (error: any) {
             console.error(error);
-            const msg = error.response?.data?.message || "Something went wrong. Please try again.";
+            const msg = error.response?.data?.message || "Une erreur est survenue.";
             toast.error(msg);
         } finally {
             setIsLoading(false);
@@ -109,9 +111,9 @@ export default function RegisterPage() {
         <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-2xl text-center">Create Account</CardTitle>
+                    <CardTitle className="text-2xl text-center">{t('registerTitle')}</CardTitle>
                     <CardDescription className="text-center">
-                        Join G-MoP to rent or list vehicles.
+                        {t('registerDesc')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -123,7 +125,7 @@ export default function RegisterPage() {
                                 name="fullName"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Full Name</FormLabel>
+                                        <FormLabel>{t('fullNameLabel')}</FormLabel>
                                         <FormControl>
                                             <Input placeholder="Mory Kanté" {...field} />
                                         </FormControl>
@@ -138,16 +140,16 @@ export default function RegisterPage() {
                                     name="userType"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>I want to</FormLabel>
+                                            <FormLabel>{t('iWantToLabel')}</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Select a role" />
+                                                        <SelectValue placeholder={t('renterOption')} />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    <SelectItem value="Renter">Rent a Car</SelectItem>
-                                                    <SelectItem value="Owner">List my Car</SelectItem>
+                                                    <SelectItem value="Renter">{t('renterOption')}</SelectItem>
+                                                    <SelectItem value="Owner">{t('ownerOption')}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
@@ -159,7 +161,7 @@ export default function RegisterPage() {
                                     name="phone"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Phone</FormLabel>
+                                            <FormLabel>{t('phoneLabel')}</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="620 00 00 00" {...field} />
                                             </FormControl>
@@ -174,9 +176,9 @@ export default function RegisterPage() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Email</FormLabel>
+                                        <FormLabel>{t('emailLabel')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="mory@example.com" {...field} />
+                                            <Input placeholder="mory@exemple.com" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -188,7 +190,7 @@ export default function RegisterPage() {
                                 name="password"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Password</FormLabel>
+                                        <FormLabel>{t('passwordLabel')}</FormLabel>
                                         <FormControl>
                                             <Input type="password" placeholder="******" {...field} />
                                         </FormControl>
@@ -202,7 +204,7 @@ export default function RegisterPage() {
                                 name="confirmPassword"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Confirm Password</FormLabel>
+                                        <FormLabel>{t('confirmPasswordLabel')}</FormLabel>
                                         <FormControl>
                                             <Input type="password" placeholder="******" {...field} />
                                         </FormControl>
@@ -212,15 +214,15 @@ export default function RegisterPage() {
                             />
 
                             <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? "creating..." : "Register"}
+                                {isLoading ? t('registering') : t('registerButton')}
                             </Button>
                         </form>
                     </Form>
                 </CardContent>
                 <CardFooter className="justify-center text-sm text-gray-500">
-                    Already have an account?
+                    {t('alreadyHaveAccount')}
                     <Link href="/login" className="ml-1 font-semibold text-primary hover:underline">
-                        Login
+                        {t('loginLink')}
                     </Link>
                 </CardFooter>
             </Card>

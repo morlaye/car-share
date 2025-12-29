@@ -82,6 +82,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // Enable static files for uploads
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();

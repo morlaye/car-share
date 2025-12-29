@@ -1,0 +1,74 @@
+{
+    "Navigation": {
+        "home": "G-MoP",
+        "listCar": "List Your Car",
+        "login": "Login",
+        "register": "Register"
+    },
+    "Hero": {
+        "title": "Rent a Car in Guinea, Simplified.",
+        "highlight": "Simplified.",
+        "subtitle": "The first trusted peer-to-peer car sharing marketplace. Find a verified car or list yours today.",
+        "searchPlaceholder": "Search by make or model (e.g. Toyota)",
+        "searchButton": "Search",
+        "where": "Location"
+    },
+    "Home": {
+        "availableVehicles": "Available Vehicles",
+        "noVehiclesTitle": "No vehicles found",
+        "noVehiclesDesc": "Be the first to list a car in Guinea!",
+        "addVehicleButton": "List a Vehicle"
+    },
+    "VehicleCard": {
+        "chauffeurIncluded": "Chauffeur Available",
+        "viewDetails": "View Details",
+        "perDay": "/ day"
+    },
+    "Auth": {
+        "loginTitle": "Welcome Back",
+        "loginDesc": "Login to your G-MoP account",
+        "registerTitle": "Create Account",
+        "registerDesc": "Join G-MoP to rent or list vehicles.",
+        "emailLabel": "Email",
+        "passwordLabel": "Password",
+        "confirmPasswordLabel": "Confirm Password",
+        "fullNameLabel": "Full Name",
+        "phoneLabel": "Phone",
+        "iWantToLabel": "I want to",
+        "renterOption": "Rent a Car",
+        "ownerOption": "List my Car",
+        "loginButton": "Login",
+        "loggingIn": "Logging in...",
+        "registerButton": "Register",
+        "registering": "Creating account...",
+        "alreadyHaveAccount": "Already have an account?",
+        "dontHaveAccount": "Don't have an account?",
+        "loginLink": "Login",
+        "registerLink": "Register",
+        "successRegister": "Account created successfully!",
+        "successLogin": "Login successful!"
+    },
+    "Listing": {
+        "title": "List your vehicle",
+        "subtitle": "Earn money by renting your car safely.",
+        "makeLabel": "Make",
+        "modelLabel": "Model",
+        "yearLabel": "Year",
+        "plateLabel": "License Plate",
+        "vinLabel": "VIN",
+        "rateLabel": "Daily Rate (GNF)",
+        "cityLabel": "City",
+        "descLabel": "Description",
+        "photoLabel": "Vehicle Photo",
+        "chauffeurOption": "Chauffeur Available?",
+        "chauffeurFeeLabel": "Chauffeur Fee / Day",
+        "submitButton": "Create Listing",
+        "success": "Vehicle created successfully!"
+    },
+    "Validation": {
+        "required": "Required",
+        "email": "Please enter a valid email address.",
+        "minChar": "Must be at least {min} characters.",
+        "passwordMismatch": "Passwords don't match"
+    }
+}

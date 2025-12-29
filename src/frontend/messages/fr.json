@@ -1,0 +1,74 @@
+{
+    "Navigation": {
+        "home": "G-MoP",
+        "listCar": "Inscrivez votre voiture",
+        "login": "Connexion",
+        "register": "S'inscrire"
+    },
+    "Hero": {
+        "title": "Louez une voiture en Guinée, en toute simplicité.",
+        "highlight": "Simplement.",
+        "subtitle": "La première plateforme de location de voitures entre particuliers. Trouvez une voiture vérifiée ou louez la vôtre dès aujourd'hui.",
+        "searchPlaceholder": "Rechercher par marque ou modèle (ex. Toyota)",
+        "searchButton": "Rechercher",
+        "where": "Lieu"
+    },
+    "Home": {
+        "availableVehicles": "Véhicules Disponibles",
+        "noVehiclesTitle": "Aucun véhicule trouvé",
+        "noVehiclesDesc": "Soyez le premier à louer votre voiture en Guinée !",
+        "addVehicleButton": "Ajouter un véhicule"
+    },
+    "VehicleCard": {
+        "chauffeurIncluded": "Chauffeur Inclus",
+        "viewDetails": "Voir Détails",
+        "perDay": "/ jour"
+    },
+    "Auth": {
+        "loginTitle": "Bon retour",
+        "loginDesc": "Connectez-vous à votre compte G-MoP",
+        "registerTitle": "Créer un compte",
+        "registerDesc": "Rejoignez G-MoP pour louer ou proposer des véhicules.",
+        "emailLabel": "Email",
+        "passwordLabel": "Mot de passe",
+        "confirmPasswordLabel": "Confirmer mot de passe",
+        "fullNameLabel": "Nom Complet",
+        "phoneLabel": "Téléphone",
+        "iWantToLabel": "Je veux",
+        "renterOption": "Louer une voiture",
+        "ownerOption": "Mettre en location",
+        "loginButton": "Se connecter",
+        "loggingIn": "Connexion en cours...",
+        "registerButton": "S'inscrire",
+        "registering": "Création en cours...",
+        "alreadyHaveAccount": "Déjà un compte ?",
+        "dontHaveAccount": "Pas encore de compte ?",
+        "loginLink": "Se connecter",
+        "registerLink": "S'inscrire",
+        "successRegister": "Compte créé avec succès !",
+        "successLogin": "Connexion réussie !"
+    },
+    "Listing": {
+        "title": "Inscrivez votre véhicule",
+        "subtitle": "Gagnez de l'argent en louant votre voiture en toute sécurité.",
+        "makeLabel": "Marque",
+        "modelLabel": "Modèle",
+        "yearLabel": "Année",
+        "plateLabel": "Immatriculation",
+        "vinLabel": "Numéro de châssis (VIN)",
+        "rateLabel": "Prix par jour (GNF)",
+        "cityLabel": "Ville",
+        "descLabel": "Description",
+        "photoLabel": "Photo du véhicule",
+        "chauffeurOption": "Chauffeur disponible ?",
+        "chauffeurFeeLabel": "Frais chauffeur / jour",
+        "submitButton": "Créer l'annonce",
+        "success": "Véhicule créé avec succès !"
+    },
+    "Validation": {
+        "required": "Requis",
+        "email": "Veuillez entrer une adresse email valide.",
+        "minChar": "Doit comporter au moins {min} caractères.",
+        "passwordMismatch": "Les mots de passe ne correspondent pas"
+    }
+}

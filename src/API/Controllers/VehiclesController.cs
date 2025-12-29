@@ -35,11 +35,11 @@ public class VehiclesController : ControllerBase
         [FromQuery] bool? chauffeurRequired = null,
         [FromQuery] int limit = 20)
     {
-        // Rechercher les véhicules actifs et vérifiés
+        // Rechercher les véhicules actifs (demo: skip verification check)
         var vehiclesQuery = _context.Vehicles
             .Include(v => v.LocationCity)
             .Include(v => v.Owner)
-            .Where(v => v.ListingStatus == "Active" && v.IsVerified);
+            .Where(v => v.ListingStatus == "Active");
 
         // Filtrer par ville si spécifié
         if (cityId.HasValue)
@@ -143,6 +143,129 @@ public class VehiclesController : ControllerBase
             .ToListAsync();
 
         return Ok(cities);
+    }
+    /// <summary>
+    /// List a new vehicle (Owner)
+    /// </summary>
+    [HttpPost]
+    [Authorize] // Requires authentication
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<VehicleDetailResult>> CreateVehicle([FromForm] CreateVehicleRequest request)
+    {
+        // 1. Validate Owner (User must be logged in)
+        // For simplicity in this demo, we assume the token provides a generic NameIdentifier.
+        // In a real app, we'd look up the User entity to ensure they are an "Owner".
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        // 2. Handle Image Uploads (up to 5, max 5MB each)
+        var uploadedPhotos = new List<VehiclePhoto>();
+        const long maxFileSize = 5 * 1024 * 1024; // 5MB
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        
+        if (request.Photos != null && request.Photos.Count > 0)
+        {
+            if (request.Photos.Count > 5)
+            {
+                return BadRequest("Maximum 5 photos allowed");
+            }
+
+            var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "vehicles");
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
+
+            int displayOrder = 1;
+            foreach (var photo in request.Photos)
+            {
+                // Size validation
+                if (photo.Length > maxFileSize)
+                {
+                    return BadRequest($"File '{photo.FileName}' exceeds 5MB limit");
+                }
+
+                // Extension validation
+                var extension = Path.GetExtension(photo.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return BadRequest($"Invalid format for '{photo.FileName}'. Allowed: jpg, jpeg, png, webp");
+                }
+
+                // Save file
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await photo.CopyToAsync(stream);
+                }
+
+                uploadedPhotos.Add(new VehiclePhoto
+                {
+                    PhotoID = Guid.NewGuid(),
+                    PhotoURL = $"/uploads/vehicles/{fileName}",
+                    PhotoType = displayOrder == 1 ? "Exterior" : "Other",
+                    DisplayOrder = displayOrder++,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        // 3. Create Entity
+        var vehicle = new Vehicle
+        {
+            VehicleID = Guid.NewGuid(),
+            OwnerID = userId,
+            Make = request.Make,
+            Model = request.Model,
+            Year = request.Year,
+            LicensePlate = request.LicensePlate,
+            VIN = request.VIN,
+            BaseDailyRate = request.BaseDailyRate,
+            CurrencyCode = "GNF", // Default
+            LocationCityID = request.CityID,
+            IsChauffeurAvailable = request.IsChauffeurAvailable,
+            ChauffeurDailyFee = request.ChauffeurDailyFee,
+            Description = request.Description,
+            ListingStatus = "Active", // Auto-active for demo
+            IsVerified = false, // verification flow separate
+            CreatedAt = DateTime.UtcNow,
+            Photos = uploadedPhotos
+        };
+
+        _context.Vehicles.Add(vehicle);
+        await _context.SaveChangesAsync();
+
+        // 4. Return Result
+        // Reload including relations for accurate response
+        var createdVehicle = await _context.Vehicles
+            .Include(v => v.LocationCity)
+            .Include(v => v.Owner)
+            .Include(v => v.Photos)
+            .FirstOrDefaultAsync(v => v.VehicleID == vehicle.VehicleID);
+
+        if (createdVehicle == null) return StatusCode(500, "Failed to retrieve created vehicle");
+
+        return CreatedAtAction(nameof(GetVehicle), new { id = createdVehicle.VehicleID }, new VehicleDetailResult
+        {
+            VehicleID = createdVehicle.VehicleID,
+            Make = createdVehicle.Make,
+            Model = createdVehicle.Model,
+            Year = createdVehicle.Year,
+            Description = createdVehicle.Description,
+            BaseDailyRate = createdVehicle.BaseDailyRate,
+            CurrencyCode = createdVehicle.CurrencyCode,
+            IsChauffeurAvailable = createdVehicle.IsChauffeurAvailable,
+            ChauffeurDailyFee = createdVehicle.ChauffeurDailyFee,
+            CityName = createdVehicle.LocationCity.CityName,
+            OwnerName = createdVehicle.Owner.FullName,
+            IsVerified = createdVehicle.IsVerified,
+            PhotoURLs = createdVehicle.Photos.Select(p => p.PhotoURL).ToList()
+        });
     }
 }
 

@@ -9,10 +9,31 @@ export const api = axios.create({
     },
 });
 
-// Interceptor for handling errors (can handle 401 later)
+// Request interceptor - attach JWT token to all requests
+api.interceptors.request.use(
+    (config) => {
+        // Only run in browser
+        if (typeof window !== "undefined") {
+            const token = localStorage.getItem("token");
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Response interceptor for handling errors (can handle 401 later)
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        // Optional: auto-logout on 401
+        if (error.response?.status === 401 && typeof window !== "undefined") {
+            localStorage.removeItem("token");
+            // Optionally redirect to login
+            // window.location.href = "/login";
+        }
         return Promise.reject(error);
     }
 );
