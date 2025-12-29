@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace GMoP.API.Models;
 
 /// <summary>
@@ -5,6 +7,7 @@ namespace GMoP.API.Models;
 /// </summary>
 public class User
 {
+    [Key]
     public Guid UserID { get; set; }
     public string CountryCode { get; set; } = "GN";
     public string Email { get; set; } = string.Empty;
@@ -30,6 +33,7 @@ public class User
 /// </summary>
 public class City
 {
+    [Key]
     public int CityID { get; set; }
     public string CountryCode { get; set; } = "GN";
     public string CityName { get; set; } = string.Empty;
@@ -45,6 +49,7 @@ public class City
 /// </summary>
 public class Vehicle
 {
+    [Key]
     public Guid VehicleID { get; set; }
     public Guid OwnerID { get; set; }
     public Guid? AgentContractID { get; set; }
@@ -83,6 +88,7 @@ public class Vehicle
 /// </summary>
 public class VehicleDocument
 {
+    [Key]
     public Guid DocumentID { get; set; }
     public Guid VehicleID { get; set; }
     
@@ -106,6 +112,7 @@ public class VehicleDocument
 /// </summary>
 public class VehiclePhoto
 {
+    [Key]
     public Guid PhotoID { get; set; }
     public Guid VehicleID { get; set; }
     public string PhotoURL { get; set; } = string.Empty;
@@ -121,6 +128,7 @@ public class VehiclePhoto
 /// </summary>
 public class Booking
 {
+    [Key]
     public Guid BookingID { get; set; }
     public string BookingReference { get; set; } = string.Empty;
     public Guid VehicleID { get; set; }
@@ -160,6 +168,7 @@ public class Booking
 /// </summary>
 public class Penalty
 {
+    [Key]
     public Guid PenaltyID { get; set; }
     public Guid UserID { get; set; }
     public Guid? BookingID { get; set; }
@@ -182,6 +191,7 @@ public class Penalty
 /// </summary>
 public class Message
 {
+    [Key]
     public Guid MessageID { get; set; }
     public Guid ConversationID { get; set; }
     public Guid SenderID { get; set; }
@@ -205,6 +215,7 @@ public class Message
 /// </summary>
 public class Review
 {
+    [Key]
     public Guid ReviewID { get; set; }
     public Guid BookingID { get; set; }
     public Guid ReviewerID { get; set; }
@@ -222,6 +233,7 @@ public class Review
 /// </summary>
 public class Payment
 {
+    [Key]
     public Guid PaymentID { get; set; }
     public Guid BookingID { get; set; }
     
@@ -250,6 +262,7 @@ public class Payment
 /// </summary>
 public class AgencyContract
 {
+    [Key]
     public Guid ContractID { get; set; }
     public Guid ManagerID { get; set; }
     public Guid? OwnerID { get; set; }

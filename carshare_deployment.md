@@ -166,6 +166,37 @@ sudo sh get-docker.sh
 curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 # Access Coolify UI: http://192.168.1.20:8000
+
+---
+
+### Connecting Private GitHub Repositories
+
+**Method: Deploy Keys (Secure & Repository-Ievel Access)**
+
+1. **Generate SSH Key (ED25519)**
+   - In Coolify: Go to **Keys & Tokens** > **Private Keys**.
+   - Click **+ Add** -> `GitHub Deploy Key`.
+   - Click **Generate Key**.
+   - **Copy the Public Key** shown.
+
+2. **Add to GitHub**
+   - Go to your Repository Settings on GitHub.
+   - Select **Deploy keys** from the sidebar.
+   - Click **Add deploy key**.
+   - Title: `Coolify`
+   - Key: Paste the public key.
+   - **Do NOT** check "Allow write access".
+
+3. **Deploy Project**
+   - In Coolify Project: Click **+ New Resource**.
+   - Select **Private Repository (with Deploy Key)**.
+   - Use the keys just created.
+   - Repository URL: `git@github.com:username/repo.git` (Use SSH format!)
+   - Branch: `main`
+   - Build Pack: `Docker Compose` (since we created Dockerfiles).
+   - **Base Directory**: `/src/API` (for backend) or `/src/frontend` (for frontend).
+
+---
 ```
 
 ---

@@ -39,8 +39,8 @@ pnpm-debug.log*
 
 # Local settings
 appsettings.local.json
-appsettings.Development.json
-!src/API/appsettings.Development.json # Keep the template for dev reference, but usually ignored in strict teams. 
+# # appsettings.Development.json
+# !src/API/appsettings.Development.json # Keep the template for dev reference, but usually ignored in strict teams. 
 # For this solo project, keeping the generic dev settings in git is helpful for the VM setup.
 # Modify if sensitive data is added.
 

@@ -127,5 +127,19 @@ public class GMoPDbContext : DbContext
                   .HasForeignKey(e => e.BookingID)
                   .OnDelete(DeleteBehavior.NoAction);
         });
+
+        // AgencyContract configuration
+        modelBuilder.Entity<AgencyContract>(entity =>
+        {
+            entity.HasKey(e => e.ContractID);
+            entity.HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(e => e.ManagerID)
+                  .OnDelete(DeleteBehavior.NoAction);
+            entity.HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(e => e.OwnerID)
+                  .OnDelete(DeleteBehavior.NoAction);
+        });
     }
 }
