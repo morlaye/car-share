@@ -1,0 +1,6 @@
+@GMoP.API_HostAddress = http://localhost:5105
+
+GET {{GMoP.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
