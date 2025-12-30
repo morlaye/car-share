@@ -37,12 +37,14 @@ interface VehicleItem {
 export default function DashboardPage() {
     const t = useTranslations('Dashboard');
     const tNav = useTranslations('Navigation');
+    const tReviews = useTranslations('Reviews');
 
     const [myBookings, setMyBookings] = useState<BookingItem[]>([]);
     const [myVehicles, setMyVehicles] = useState<VehicleItem[]>([]);
     const [ownerRequests, setOwnerRequests] = useState<BookingItem[]>([]);
+    const [pendingReviews, setPendingReviews] = useState<{ bookingID: string; bookingReference: string; vehicleName: string; endDate: string }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'bookings' | 'vehicles' | 'requests'>('bookings');
+    const [activeTab, setActiveTab] = useState<'bookings' | 'vehicles' | 'requests' | 'reviews'>('bookings');
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -55,11 +57,13 @@ export default function DashboardPage() {
         Promise.all([
             api.get<BookingItem[]>("/api/bookings/my-bookings").catch(() => ({ data: [] })),
             api.get<VehicleItem[]>("/api/vehicles/my-vehicles").catch(() => ({ data: [] })),
-            api.get<BookingItem[]>("/api/bookings/owner-requests").catch(() => ({ data: [] }))
-        ]).then(([bookingsRes, vehiclesRes, requestsRes]) => {
+            api.get<BookingItem[]>("/api/bookings/owner-requests").catch(() => ({ data: [] })),
+            api.get<{ bookingID: string; bookingReference: string; vehicleName: string; endDate: string }[]>("/api/reviews/pending").catch(() => ({ data: [] }))
+        ]).then(([bookingsRes, vehiclesRes, requestsRes, reviewsRes]) => {
             setMyBookings(bookingsRes.data);
             setMyVehicles(vehiclesRes.data);
             setOwnerRequests(requestsRes.data);
+            setPendingReviews(reviewsRes.data);
         }).finally(() => setIsLoading(false));
     }, []);
 
@@ -94,6 +98,18 @@ export default function DashboardPage() {
             setOwnerRequests(res.data);
         } catch (error: any) {
             toast.error(error.response?.data || "Failed to update booking");
+        }
+    };
+
+    const handleCancelBooking = async (bookingId: string) => {
+        try {
+            await api.put(`/api/bookings/${bookingId}/cancel`);
+            toast.success("Booking cancelled");
+            // Refresh my bookings
+            const res = await api.get<BookingItem[]>("/api/bookings/my-bookings");
+            setMyBookings(res.data);
+        } catch (error: any) {
+            toast.error(error.response?.data || "Failed to cancel booking");
         }
     };
 
@@ -138,11 +154,24 @@ export default function DashboardPage() {
                     >
                         {t('bookingRequests')} ({ownerRequests.filter(r => r.status === 'Requested').length})
                     </button>
+                    {pendingReviews.length > 0 && (
+                        <button
+                            onClick={() => setActiveTab('reviews')}
+                            className={`px-4 py-2 font-medium transition-colors ${activeTab === 'reviews' ? 'text-primary border-b-2 border-primary' : 'text-orange-500 hover:text-orange-600'}`}
+                        >
+                            ⭐ {tReviews('pendingReviews')} ({pendingReviews.length})
+                        </button>
+                    )}
                 </div>
 
                 {/* My Bookings Tab */}
                 {activeTab === 'bookings' && (
                     <div className="space-y-4">
+                        <div className="flex justify-end">
+                            <Link href="/">
+                                <Button className="bg-primary-action hover:bg-primary-action/90 text-white">Louer un véhicule</Button>
+                            </Link>
+                        </div>
                         {myBookings.length === 0 ? (
                             <Card><CardContent className="p-8 text-center text-slate-500">{t('noBookings')}</CardContent></Card>
                         ) : (
@@ -162,6 +191,16 @@ export default function DashboardPage() {
                                                 <p className="font-bold text-primary">{formatPrice(booking.totalAmount, booking.currencyCode)}</p>
                                                 <Badge className={getStatusColor(booking.status)}>{booking.status}</Badge>
                                             </div>
+                                            {(booking.status === 'Requested' || booking.status === 'Confirmed') && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleCancelBooking(booking.bookingID)}
+                                                    className="text-red-600 border-red-300 hover:bg-red-50"
+                                                >
+                                                    {t('cancel')}
+                                                </Button>
+                                            )}
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -239,6 +278,32 @@ export default function DashboardPage() {
                                 </Card>
                             ))
                         )}
+                    </div>
+                )}
+
+                {/* Pending Reviews Tab */}
+                {activeTab === 'reviews' && (
+                    <div className="space-y-4">
+                        <div className="text-sm text-slate-500 mb-4">
+                            ⭐ Vous avez {pendingReviews.length} location(s) à évaluer
+                        </div>
+                        {pendingReviews.map(review => (
+                            <Card key={review.bookingID}>
+                                <CardContent className="p-4 flex items-center justify-between">
+                                    <div>
+                                        <p className="font-bold text-primary">{review.vehicleName}</p>
+                                        <p className="text-sm text-slate-500">
+                                            {review.bookingReference} • Terminée le {new Date(review.endDate).toLocaleDateString('fr-FR')}
+                                        </p>
+                                    </div>
+                                    <Link href={`/reviews?bookingId=${review.bookingID}`}>
+                                        <Button className="bg-primary-action hover:bg-primary-action/90 text-white">
+                                            {tReviews('writeReview')}
+                                        </Button>
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        ))}
                     </div>
                 )}
             </main>

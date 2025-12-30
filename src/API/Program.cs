@@ -37,6 +37,9 @@ builder.Services.AddDbContext<GMoPDbContext>(options =>
         sqlOptions => sqlOptions.EnableRetryOnFailure(3)
     ));
 
+// Email Service
+builder.Services.AddScoped<GMoP.API.Services.IEmailService, GMoP.API.Services.EmailService>();
+
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");

@@ -25,12 +25,19 @@ interface VehicleInfo {
     photoURLs: string[];
 }
 
+interface BookedDateRange {
+    startDate: string;
+    endDate: string;
+    status: string;
+}
+
 export default function BookingPage() {
     const params = useParams();
     const vehicleId = params.vehicleId as string;
     const t = useTranslations('Booking');
 
     const [vehicle, setVehicle] = useState<VehicleInfo | null>(null);
+    const [bookedDates, setBookedDates] = useState<BookedDateRange[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -50,7 +57,7 @@ export default function BookingPage() {
         total: 0
     });
 
-    // Auth check + fetch vehicle
+    // Auth check + fetch vehicle + booked dates
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -59,10 +66,17 @@ export default function BookingPage() {
         }
 
         if (vehicleId) {
-            api.get<VehicleInfo>(`/api/vehicles/${vehicleId}`)
-                .then(res => setVehicle(res.data))
-                .catch(() => toast.error("Vehicle not found"))
-                .finally(() => setIsLoading(false));
+            Promise.all([
+                api.get<VehicleInfo>(`/api/vehicles/${vehicleId}`),
+                api.get<BookedDateRange[]>(`/api/bookings/booked-dates/${vehicleId}`)
+            ]).then(([vehicleRes, bookedRes]) => {
+                setVehicle(vehicleRes.data);
+                setBookedDates(bookedRes.data);
+            }).catch(() => {
+                toast.error("Vehicle not found");
+            }).finally(() => {
+                setIsLoading(false);
+            });
         }
     }, [vehicleId]);
 
@@ -207,6 +221,25 @@ export default function BookingPage() {
                                                 />
                                             </div>
                                         </div>
+
+                                        {/* Availability Calendar */}
+                                        {bookedDates.length > 0 && (
+                                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                                <p className="text-sm font-medium text-orange-800 mb-2">📅 Dates indisponibles:</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {bookedDates.map((range, idx) => (
+                                                        <span
+                                                            key={idx}
+                                                            className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded"
+                                                        >
+                                                            {new Date(range.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                                            {' → '}
+                                                            {new Date(range.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {vehicle.isChauffeurAvailable && (
                                             <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">

@@ -211,21 +211,36 @@ public class Message
 }
 
 /// <summary>
-/// Review entity for mutual ratings
+/// Review entity for vehicle ratings after completed bookings
 /// </summary>
 public class Review
 {
     [Key]
     public Guid ReviewID { get; set; }
     public Guid BookingID { get; set; }
-    public Guid ReviewerID { get; set; }
-    public Guid RevieweeID { get; set; }
+    public Guid VehicleID { get; set; }
+    public Guid ReviewerID { get; set; }  // Renter who wrote the review
+    public Guid OwnerID { get; set; }     // Owner of the vehicle
     
-    public int Rating { get; set; } // 1-5
+    // Overall rating (calculated average of categories)
+    public decimal OverallRating { get; set; } // 1.0-5.0
+    
+    // Category ratings (1-5 stars each)
+    public int CleanlinessRating { get; set; }   // Propreté
+    public int MaintenanceRating { get; set; }   // Entretien
+    public int CommunicationRating { get; set; } // Communication
+    public int ConvenienceRating { get; set; }   // Commodité
+    public int AccuracyRating { get; set; }      // Exactitude
+    
     public string? Comment { get; set; }
-    public string ReviewType { get; set; } = string.Empty; // OwnerToRenter, RenterToOwner
+    public bool IsPublished { get; set; } = true;
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    // Navigation
+    public Booking Booking { get; set; } = null!;
+    public Vehicle Vehicle { get; set; } = null!;
+    public User Reviewer { get; set; } = null!;
 }
 
 /// <summary>

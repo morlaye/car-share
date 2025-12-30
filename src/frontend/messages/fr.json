@@ -99,7 +99,40 @@
         "reject": "Refuser",
         "addVehicle": "Ajouter un véhicule",
         "days": "jours",
-        "perDay": "/ jour"
+        "perDay": "/ jour",
+        "cancel": "Annuler"
+    },
+    "Admin": {
+        "title": "Administration",
+        "stats": "Statistiques",
+        "bookings": "Réservations",
+        "users": "Utilisateurs",
+        "vehicles": "Véhicules",
+        "totalUsers": "Total Utilisateurs",
+        "totalVehicles": "Total Véhicules",
+        "pendingPayments": "Paiements en attente",
+        "confirmDeposit": "Confirmer Caution",
+        "confirmFull": "Paiement Complet",
+        "complete": "Terminer",
+        "verify": "Vérifier",
+        "unverify": "Retirer vérification"
+    },
+    "Reviews": {
+        "title": "Avis",
+        "writeReview": "Écrire un avis",
+        "noReviews": "Aucun avis pour le moment",
+        "cleanliness": "Propreté",
+        "maintenance": "Entretien",
+        "communication": "Communication",
+        "convenience": "Commodité",
+        "accuracy": "Exactitude",
+        "comment": "Commentaire",
+        "submit": "Publier l'avis",
+        "success": "Avis publié avec succès!",
+        "pendingReviews": "Avis en attente",
+        "tripsSince": "voyages depuis",
+        "memberSince": "Membre depuis",
+        "ownerRating": "Note du propriétaire"
     },
     "Validation": {
         "required": "Requis",

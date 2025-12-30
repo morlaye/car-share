@@ -25,12 +25,43 @@ interface VehicleDetail {
     photoURLs: string[];
 }
 
+interface ReviewData {
+    reviewID: string;
+    overallRating: number;
+    cleanlinessRating: number;
+    maintenanceRating: number;
+    communicationRating: number;
+    convenienceRating: number;
+    accuracyRating: number;
+    comment?: string;
+    reviewerName: string;
+    createdAt: string;
+}
+
+interface VehicleReviewsResult {
+    vehicleID: string;
+    totalReviews: number;
+    averageRating: number;
+    averageCleanliness: number;
+    averageMaintenance: number;
+    averageCommunication: number;
+    averageConvenience: number;
+    averageAccuracy: number;
+    ownerName: string;
+    ownerRating: number;
+    ownerTotalTrips: number;
+    ownerMemberSince: string;
+    reviews: ReviewData[];
+}
+
 export default function VehicleDetailPage() {
     const params = useParams();
     const id = params.id as string;
     const tNav = useTranslations('Navigation');
+    const tReviews = useTranslations('Reviews');
 
     const [vehicle, setVehicle] = useState<VehicleDetail | null>(null);
+    const [reviewsData, setReviewsData] = useState<VehicleReviewsResult | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -38,16 +69,17 @@ export default function VehicleDetailPage() {
     useEffect(() => {
         if (!id) return;
 
-        api.get<VehicleDetail>(`/api/vehicles/${id}`)
-            .then(res => {
-                setVehicle(res.data);
-            })
-            .catch(err => {
-                setError(err.response?.data?.message || "Vehicle not found");
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
+        Promise.all([
+            api.get<VehicleDetail>(`/api/vehicles/${id}`),
+            api.get<VehicleReviewsResult>(`/api/reviews/vehicle/${id}`)
+        ]).then(([vehicleRes, reviewsRes]) => {
+            setVehicle(vehicleRes.data);
+            setReviewsData(reviewsRes.data);
+        }).catch(err => {
+            setError(err.response?.data?.message || "Vehicle not found");
+        }).finally(() => {
+            setIsLoading(false);
+        });
     }, [id]);
 
     // Format price
@@ -240,6 +272,117 @@ export default function VehicleDetailPage() {
                         </Card>
                     </div>
                 </div>
+
+                {/* Reviews Section */}
+                <section className="mt-12">
+                    <h2 className="text-2xl font-bold text-primary mb-6">{tReviews('title')}</h2>
+
+                    {reviewsData && (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Left: Owner Stats & Rating Summary */}
+                            <div className="lg:col-span-1 space-y-6">
+                                {/* Owner Stats Card */}
+                                <Card>
+                                    <CardContent className="p-6">
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <div className="h-16 w-16 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold">
+                                                {reviewsData.ownerName?.charAt(0) || "?"}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-lg">{reviewsData.ownerName}</p>
+                                                <div className="flex items-center gap-1 text-yellow-500">
+                                                    {"★".repeat(Math.floor(reviewsData.ownerRating))}
+                                                    {"☆".repeat(5 - Math.floor(reviewsData.ownerRating))}
+                                                    <span className="text-slate-600 ml-1">{reviewsData.ownerRating.toFixed(1)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-sm text-slate-600 space-y-1">
+                                            <p>🚗 <strong>{reviewsData.ownerTotalTrips}</strong> {tReviews('tripsSince')} {new Date(reviewsData.ownerMemberSince).getFullYear()}</p>
+                                            <p>📅 {tReviews('memberSince')} {new Date(reviewsData.ownerMemberSince).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Rating Breakdown */}
+                                <Card>
+                                    <CardContent className="p-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <span className="text-3xl font-bold text-primary">{reviewsData.averageRating.toFixed(1)}</span>
+                                            <div>
+                                                <div className="text-yellow-500 text-lg">
+                                                    {"★".repeat(Math.floor(reviewsData.averageRating))}
+                                                    {"☆".repeat(5 - Math.floor(reviewsData.averageRating))}
+                                                </div>
+                                                <p className="text-xs text-slate-500">{reviewsData.totalReviews} {tReviews('title').toLowerCase()}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Category Bars */}
+                                        <div className="space-y-3">
+                                            {[
+                                                { label: tReviews('cleanliness'), value: reviewsData.averageCleanliness },
+                                                { label: tReviews('maintenance'), value: reviewsData.averageMaintenance },
+                                                { label: tReviews('communication'), value: reviewsData.averageCommunication },
+                                                { label: tReviews('convenience'), value: reviewsData.averageConvenience },
+                                                { label: tReviews('accuracy'), value: reviewsData.averageAccuracy },
+                                            ].map(cat => (
+                                                <div key={cat.label} className="flex items-center gap-2">
+                                                    <span className="text-xs text-slate-600 w-28 truncate">{cat.label}</span>
+                                                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-primary rounded-full transition-all"
+                                                            style={{ width: `${(cat.value / 5) * 100}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs font-medium w-6">{cat.value.toFixed(1)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            {/* Right: Review List */}
+                            <div className="lg:col-span-2 space-y-4">
+                                {reviewsData.reviews.length === 0 ? (
+                                    <Card>
+                                        <CardContent className="p-8 text-center text-slate-500">
+                                            {tReviews('noReviews')}
+                                        </CardContent>
+                                    </Card>
+                                ) : (
+                                    reviewsData.reviews.map(review => (
+                                        <Card key={review.reviewID}>
+                                            <CardContent className="p-4">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-10 w-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-medium">
+                                                            {review.reviewerName.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium">{review.reviewerName}</p>
+                                                            <p className="text-xs text-slate-500">
+                                                                {new Date(review.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-yellow-500">
+                                                        {"★".repeat(Math.round(review.overallRating))}
+                                                        {"☆".repeat(5 - Math.round(review.overallRating))}
+                                                    </div>
+                                                </div>
+                                                {review.comment && (
+                                                    <p className="text-slate-700 text-sm">{review.comment}</p>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </section>
             </main>
         </div>
     );

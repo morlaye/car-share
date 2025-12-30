@@ -99,7 +99,40 @@
         "reject": "Reject",
         "addVehicle": "Add Vehicle",
         "days": "days",
-        "perDay": "/ day"
+        "perDay": "/ day",
+        "cancel": "Cancel"
+    },
+    "Admin": {
+        "title": "Administration",
+        "stats": "Statistics",
+        "bookings": "Bookings",
+        "users": "Users",
+        "vehicles": "Vehicles",
+        "totalUsers": "Total Users",
+        "totalVehicles": "Total Vehicles",
+        "pendingPayments": "Pending Payments",
+        "confirmDeposit": "Confirm Deposit",
+        "confirmFull": "Full Payment",
+        "complete": "Complete",
+        "verify": "Verify",
+        "unverify": "Unverify"
+    },
+    "Reviews": {
+        "title": "Reviews",
+        "writeReview": "Write a Review",
+        "noReviews": "No reviews yet",
+        "cleanliness": "Cleanliness",
+        "maintenance": "Maintenance",
+        "communication": "Communication",
+        "convenience": "Convenience",
+        "accuracy": "Accuracy",
+        "comment": "Comment",
+        "submit": "Submit Review",
+        "success": "Review submitted successfully!",
+        "pendingReviews": "Pending Reviews",
+        "tripsSince": "trips since",
+        "memberSince": "Member since",
+        "ownerRating": "Owner Rating"
     },
     "Validation": {
         "required": "Required",

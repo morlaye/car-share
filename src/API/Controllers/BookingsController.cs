@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using GMoP.API.Data;
 using GMoP.API.Models;
+using GMoP.API.Services;
 
 namespace GMoP.API.Controllers;
 
@@ -16,11 +17,13 @@ public class BookingsController : ControllerBase
 {
     private readonly GMoPDbContext _context;
     private readonly ILogger<BookingsController> _logger;
+    private readonly IEmailService _emailService;
 
-    public BookingsController(GMoPDbContext context, ILogger<BookingsController> logger)
+    public BookingsController(GMoPDbContext context, ILogger<BookingsController> logger, IEmailService emailService)
     {
         _context = context;
         _logger = logger;
+        _emailService = emailService;
     }
 
     /// <summary>
@@ -123,6 +126,16 @@ public class BookingsController : ControllerBase
 
         // 9. Get renter info for response
         var renter = await _context.Users.FindAsync(renterId);
+
+        // 10. Send email notification to owner
+        _ = _emailService.SendBookingRequestedAsync(
+            vehicle.Owner.Email,
+            vehicle.Owner.FullName,
+            $"{vehicle.Year} {vehicle.Make} {vehicle.Model}",
+            renter?.FullName ?? "Unknown",
+            booking.StartDate,
+            booking.EndDate
+        );
 
         return Ok(new BookingResponse
         {
@@ -266,11 +279,103 @@ public class BookingsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        // Send email notification to renter
+        var renter = await _context.Users.FindAsync(booking.RenterID);
+        var vehicle = booking.Vehicle;
+        
+        if (request.Status == "Confirmed" && renter != null)
+        {
+            _ = _emailService.SendBookingConfirmedAsync(
+                renter.Email,
+                renter.FullName,
+                $"{vehicle.Year} {vehicle.Make} {vehicle.Model}",
+                vehicle.Owner?.FullName ?? "Owner",
+                booking.StartDate,
+                booking.EndDate
+            );
+        }
+        else if (request.Status == "Cancelled" && renter != null)
+        {
+            _ = _emailService.SendBookingCancelledAsync(
+                renter.Email,
+                renter.FullName,
+                $"{vehicle.Year} {vehicle.Make} {vehicle.Model}",
+                booking.BookingReference
+            );
+        }
+
         return Ok(new { message = $"Booking {request.Status.ToLower()}" });
+    }
+
+    /// <summary>
+    /// Renter cancels their own booking
+    /// </summary>
+    [HttpPut("{id}/cancel")]
+    [Authorize]
+    public async Task<ActionResult> CancelBooking(Guid id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var booking = await _context.Bookings.FindAsync(id);
+        if (booking == null)
+        {
+            return NotFound("Booking not found");
+        }
+
+        // Only the renter can cancel their booking
+        if (booking.RenterID != userId)
+        {
+            return Forbid();
+        }
+
+        // Can only cancel if Requested or Confirmed
+        if (booking.Status != "Requested" && booking.Status != "Confirmed")
+        {
+            return BadRequest("Cannot cancel a booking that is already active, completed, or cancelled");
+        }
+
+        booking.Status = "Cancelled";
+        booking.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Booking cancelled" });
+    }
+
+    /// <summary>
+    /// Get booked dates for a vehicle (for availability calendar)
+    /// </summary>
+    [HttpGet("booked-dates/{vehicleId}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<BookedDateRange>>> GetBookedDates(Guid vehicleId)
+    {
+        var bookings = await _context.Bookings
+            .Where(b => b.VehicleID == vehicleId 
+                && b.Status != "Cancelled"
+                && b.EndDate >= DateTime.UtcNow.Date)
+            .Select(b => new BookedDateRange
+            {
+                StartDate = b.StartDate,
+                EndDate = b.EndDate,
+                Status = b.Status
+            })
+            .ToListAsync();
+
+        return Ok(bookings);
     }
 }
 
 public class UpdateBookingStatusRequest
 {
+    public string Status { get; set; } = string.Empty;
+}
+
+public class BookedDateRange
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
     public string Status { get; set; } = string.Empty;
 }
