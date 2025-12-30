@@ -186,8 +186,29 @@ export default function Home() {
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-[350px] bg-slate-100 rounded-xl animate-pulse"></div>
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 animate-pulse">
+                {/* Image skeleton */}
+                <div className="h-48 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer"></div>
+                {/* Content skeleton */}
+                <div className="p-5 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 flex-1">
+                      <div className="h-5 bg-slate-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-slate-100 rounded w-1/2"></div>
+                    </div>
+                    <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-6 w-16 bg-slate-100 rounded-full"></div>
+                    <div className="h-6 w-24 bg-slate-100 rounded-full"></div>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                    <div className="h-6 w-28 bg-slate-200 rounded"></div>
+                    <div className="h-8 w-20 bg-primary/20 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         ) : vehicles.length > 0 ? (
@@ -207,13 +228,27 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-24 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-            <div className="text-4xl mb-4">🚗</div>
-            <h3 className="text-xl font-bold text-primary">{tHome('noVehiclesTitle')}</h3>
-            <p className="text-slate-500 mt-2 max-w-md mx-auto">{tHome('noVehiclesDesc')}</p>
-            <Link href="/register" className="mt-6 inline-block">
-              <Button className="rounded-full px-8 bg-primary text-white">{tHome('addVehicleButton')}</Button>
-            </Link>
+          <div className="text-center py-20 px-8 bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="relative inline-block mb-6">
+              <div className="absolute inset-0 bg-primary-action/20 blur-xl rounded-full"></div>
+              <div className="relative text-6xl">🚗</div>
+            </div>
+            <h3 className="text-2xl font-bold text-primary mb-3">{tHome('noVehiclesTitle')}</h3>
+            <p className="text-slate-500 max-w-md mx-auto mb-8 leading-relaxed">{tHome('noVehiclesDesc')}</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/register">
+                <Button className="rounded-full px-8 bg-primary-action hover:bg-primary-action/90 text-white shadow-lg">
+                  {tHome('addVehicleButton')}
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                className="rounded-full px-8"
+                onClick={() => window.location.reload()}
+              >
+                🔄 Rafraîchir
+              </Button>
+            </div>
           </div>
         )}
 
