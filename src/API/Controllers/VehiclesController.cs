@@ -124,6 +124,7 @@ public class VehiclesController : ControllerBase
             CityName = vehicle.LocationCity.CityName,
             OwnerName = vehicle.Owner.FullName,
             IsVerified = vehicle.IsVerified,
+            VehicleAttributes = vehicle.VehicleAttributes,
             PhotoURLs = vehicle.Photos.OrderBy(p => p.DisplayOrder).Select(p => p.PhotoURL).ToList()
         });
     }
@@ -198,16 +199,16 @@ public class VehiclesController : ControllerBase
             return Unauthorized();
         }
 
-        // 2. Handle Image Uploads (up to 5, max 5MB each)
+        // 2. Handle Image Uploads (up to 20, max 5MB each)
         var uploadedPhotos = new List<VehiclePhoto>();
         const long maxFileSize = 5 * 1024 * 1024; // 5MB
         var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
         
         if (request.Photos != null && request.Photos.Count > 0)
         {
-            if (request.Photos.Count > 5)
+            if (request.Photos.Count > 20)
             {
-                return BadRequest("Maximum 5 photos allowed");
+                return BadRequest("Maximum 20 photos allowed");
             }
 
             var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "vehicles");
@@ -271,7 +272,14 @@ public class VehiclesController : ControllerBase
             ListingStatus = "Active", // Auto-active for demo
             IsVerified = false, // verification flow separate
             CreatedAt = DateTime.UtcNow,
-            Photos = uploadedPhotos
+            Photos = uploadedPhotos,
+            // Serialize extended attributes
+            VehicleAttributes = System.Text.Json.JsonSerializer.Serialize(new 
+            {
+                FuelType = request.FuelType,
+                Transmission = request.Transmission,
+                Features = request.Features
+            })
         };
 
         _context.Vehicles.Add(vehicle);
@@ -304,6 +312,50 @@ public class VehiclesController : ControllerBase
             PhotoURLs = createdVehicle.Photos.Select(p => p.PhotoURL).ToList()
         });
     }
+
+    /// <summary>
+    /// Get similar vehicles
+    /// </summary>
+    [HttpGet("{id}/similar")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<VehicleSearchResult>>> GetSimilarVehicles(Guid id)
+    {
+        var vehicle = await _context.Vehicles
+            .Include(v => v.LocationCity)
+            .FirstOrDefaultAsync(v => v.VehicleID == id);
+
+        if (vehicle == null)
+            return NotFound();
+
+        // Logic: Same city OR Same Make/Model, excluding current vehicle
+        var similarVehicles = await _context.Vehicles
+            .Include(v => v.LocationCity)
+            .Include(v => v.Owner)
+            .Include(v => v.Photos)
+            .Where(v => v.ListingStatus == "Active" && v.VehicleID != id)
+            .Where(v => v.LocationCityID == vehicle.LocationCityID || v.Make == vehicle.Make)
+            .OrderByDescending(v => v.LocationCityID == vehicle.LocationCityID) // Prioritize same city
+            .Take(4)
+            .Select(v => new VehicleSearchResult
+            {
+                VehicleID = v.VehicleID,
+                Make = v.Make,
+                Model = v.Model,
+                Year = v.Year,
+                BaseDailyRate = v.BaseDailyRate,
+                CurrencyCode = v.CurrencyCode,
+                IsChauffeurAvailable = v.IsChauffeurAvailable,
+                ChauffeurDailyFee = v.ChauffeurDailyFee,
+                CityName = v.LocationCity.CityName,
+                OwnerName = v.Owner.FullName,
+                PrimaryPhotoUrl = v.Photos.OrderBy(p => p.DisplayOrder).Select(p => p.PhotoURL).FirstOrDefault(),
+                AverageRating = null,
+                TripCount = 0
+            })
+            .ToListAsync();
+
+        return Ok(similarVehicles);
+    }
 }
 
 // DTOs
@@ -328,6 +380,7 @@ public record VehicleDetailResult : VehicleSearchResult
 {
     public string? Description { get; init; }
     public bool IsVerified { get; init; }
+    public string? VehicleAttributes { get; init; } // JSON
     public List<string> PhotoURLs { get; init; } = new();
 }
 

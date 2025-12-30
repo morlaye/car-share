@@ -72,7 +72,13 @@
         "descLabel": "Description",
         "photoLabel": "Photo du véhicule",
         "chauffeurOption": "Chauffeur disponible ?",
+        "chauffeurLabel": "Chauffeur disponible",
+        "chauffeurDescription": "Autorisez les utilisateurs à réserver cette voiture avec chauffeur.",
         "chauffeurFeeLabel": "Frais chauffeur / jour",
+        "cityPlaceholder": "Sélectionnez une ville",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Décrivez votre véhicule...",
+        "addPhoto": "Ajouter photo",
         "submitButton": "Créer l'annonce",
         "success": "Véhicule créé avec succès !"
     },

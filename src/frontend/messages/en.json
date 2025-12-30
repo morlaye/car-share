@@ -68,7 +68,13 @@
         "descLabel": "Description",
         "photoLabel": "Vehicle Photo",
         "chauffeurOption": "Chauffeur Available?",
+        "chauffeurLabel": "Chauffeur Available",
+        "chauffeurDescription": "Allow users to book this car with a driver.",
         "chauffeurFeeLabel": "Chauffeur Fee / Day",
+        "cityPlaceholder": "Select city",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Describe your vehicle...",
+        "addPhoto": "Add Photo",
         "submitButton": "Create Listing",
         "success": "Vehicle created successfully!"
     },

@@ -31,6 +31,11 @@ public class CreateVehicleRequest
 
     public string? Description { get; set; }
 
+    // New Attributes
+    public string FuelType { get; set; } = "Petrol"; // Petrol, Diesel, Electric, Hybrid
+    public string Transmission { get; set; } = "Automatic"; // Manual, Automatic
+    public List<string> Features { get; set; } = new(); // ["AC", "Bluetooth", ...]
+
     // Multiple photos (up to 5, max 5MB each)
     public List<IFormFile>? Photos { get; set; }
 }
