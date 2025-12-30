@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { VehicleCard } from "@/components/vehicle-card";
+import { SearchBar, SearchParams } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { toast } from "sonner";
 import { components } from "@/lib/schema";
@@ -13,19 +13,25 @@ import { useTranslations } from 'next-intl';
 // Use generated type from Contract
 type VehicleSearchResult = components["schemas"]["VehicleSearchResult"];
 
+interface City {
+  cityID: number;
+  cityName: string;
+}
+
 export default function Home() {
   const tNav = useTranslations('Navigation');
   const tHero = useTranslations('Hero');
   const tHome = useTranslations('Home');
 
   const [vehicles, setVehicles] = useState<VehicleSearchResult[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchFilters, setSearchFilters] = useState<SearchParams>({});
 
-  // Check auth + Fetch vehicles on mount
+  // Check auth + Fetch vehicles and cities on mount
   useEffect(() => {
     // Check for token
     const token = localStorage.getItem("token");
@@ -42,14 +48,25 @@ export default function Home() {
           setIsLoggedIn(false);
         });
     }
-    fetchVehicles();
+
+    // Fetch cities and vehicles in parallel
+    Promise.all([
+      api.get<City[]>("/api/cities").catch(() => ({ data: [] })),
+      fetchVehicles()
+    ]).then(([citiesRes]) => {
+      setCities(citiesRes.data);
+    });
   }, []);
 
-  async function fetchVehicles(query?: string) {
+  async function fetchVehicles(params?: SearchParams) {
     setIsLoading(true);
     try {
       // Build query string
-      const url = query ? `/api/vehicles?query=${encodeURIComponent(query)}` : "/api/vehicles";
+      const queryParts: string[] = [];
+      if (params?.cityId) queryParts.push(`cityId=${params.cityId}`);
+      if (params?.cityName) queryParts.push(`query=${encodeURIComponent(params.cityName)}`);
+
+      const url = queryParts.length > 0 ? `/api/vehicles?${queryParts.join('&')}` : "/api/vehicles";
       const res = await api.get<VehicleSearchResult[]>(url);
       setVehicles(res.data);
     } catch (error) {
@@ -59,9 +76,9 @@ export default function Home() {
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchVehicles(searchQuery);
+  const handleSearch = (params: SearchParams) => {
+    setSearchFilters(params);
+    fetchVehicles(params);
   };
 
   const handleLogout = () => {
@@ -137,7 +154,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section - Gradient & Clean */}
-      <section className="relative flex flex-col items-center justify-center pt-24 pb-32 text-center bg-gradient-to-b from-indigo-50/50 to-white overflow-hidden">
+      <section className="relative z-40 flex flex-col items-center justify-center pt-24 pb-32 text-center bg-gradient-to-b from-indigo-50/50 to-white overflow-visible">
         {/* Decorative blobs */}
         <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-indigo-200/20 blur-3xl" />
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-purple-200/20 blur-3xl opacity-50" />
@@ -153,29 +170,13 @@ export default function Home() {
             {tHero('subtitle')}
           </p>
 
-          {/* Search Bar - Floating Island */}
-          <form onSubmit={handleSearch} className="group glass max-w-2xl w-full mx-auto rounded-full p-2 flex items-center shadow-xl transform transition-all hover:scale-[1.01] hover:shadow-2xl border border-white/40">
-            <div className="flex-1 px-6 border-r border-gray-200 py-2">
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{tHero('where') || "LOCATION"}</label>
-              <Input
-                type="text"
-                placeholder="Conakry, Guinée"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent border-none p-0 h-auto text-lg text-gray-900 placeholder-gray-400 focus-visible:ring-0"
-              />
-            </div>
-            <div className="pl-4 pr-1">
-              <Button size="icon" type="submit" className="h-12 w-12 rounded-full bg-primary-action hover:bg-primary-action/90 text-white shadow-lg flex items-center justify-center transition-transform group-hover:rotate-12">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              </Button>
-            </div>
-          </form>
+          {/* Search Bar - Turo Style */}
+          <SearchBar cities={cities} onSearch={handleSearch} />
         </div>
       </section>
 
       {/* Featured / Results Section */}
-      <main className="container mx-auto px-4 py-16 flex-grow bg-white relative z-20 rounded-t-[3rem] shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)] -mt-10">
+      <main className="container mx-auto px-4 py-16 flex-grow bg-white relative z-0 rounded-t-[3rem] shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)] -mt-10">
         <div className="flex justify-between items-center mb-12">
           <div>
             <h2 className="text-2xl font-bold text-primary">{tHome('availableVehicles')}</h2>
@@ -217,7 +218,7 @@ export default function Home() {
         )}
 
         {/* Bento Grid Features (Only show if no search results or at bottom) */}
-        {!searchQuery && vehicles.length < 5 && (
+        {!searchFilters.cityId && vehicles.length < 5 && (
           <div className="mt-32">
             <h2 className="text-3xl font-bold text-primary text-center mb-14">Pourquoi G-MoP ?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
