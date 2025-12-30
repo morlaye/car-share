@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { routing } from '@/i18n/routing'; // We need this, or just hardcode locales for now
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,15 +37,19 @@ export default async function RootLayout({
     notFound();
   }
 
-  // Providing all messages to the client
-  // side is the easiest way to get started
   const messages = await getMessages();
 
   return (
     <html lang={locale}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+            <Header />
+            <main className="flex-grow flex flex-col">
+              {children}
+            </main>
+            <Footer />
+          </div>
           <Toaster />
         </NextIntlClientProvider>
       </body>

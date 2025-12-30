@@ -21,12 +21,14 @@ public class AuthController : ControllerBase
     private readonly ILogger<AuthController> _logger;
     private readonly IConfiguration _configuration;
     private readonly GMoPDbContext _context;
+    private readonly GMoP.API.Services.IEmailService _emailService;
 
-    public AuthController(ILogger<AuthController> logger, IConfiguration configuration, GMoPDbContext context)
+    public AuthController(ILogger<AuthController> logger, IConfiguration configuration, GMoPDbContext context, GMoP.API.Services.IEmailService emailService)
     {
         _logger = logger;
         _configuration = configuration;
         _context = context;
+        _emailService = emailService;
     }
 
     /// <summary>
@@ -61,7 +63,9 @@ public class AuthController : ControllerBase
             PasswordHash = passwordHash,
             FullName = request.FullName,
             UserType = request.UserType ?? "Renter",
+            CountryCode = request.CountryCode ?? "GN",
             IsVerified = false,
+            VerificationToken = Guid.NewGuid().ToString("N"), // Generate token
             IsActive = true,
             MalusPoints = 0,
             CreatedAt = DateTime.UtcNow,
@@ -71,24 +75,18 @@ public class AuthController : ControllerBase
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // 5. Generate JWT token
-        var token = GenerateJwtToken(user);
+        // Send verification email
+        var verificationLink = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/verify-email?token={user.VerificationToken}";
+        await _emailService.SendWelcomeEmailAsync(user.Email, user.FullName, verificationLink);
 
+        // 5. Do NOT generate token yet. specific requirement to validate email.
+        
         return Ok(new AuthResponse
         {
             Success = true,
-            Message = "Registration successful",
-            Token = token,
-            User = new UserProfile
-            {
-                UserID = user.UserID,
-                Email = user.Email,
-                Phone = user.Phone,
-                FullName = user.FullName,
-                UserType = user.UserType,
-                IsVerified = user.IsVerified,
-                MalusPoints = user.MalusPoints
-            }
+            Message = "Registration successful. Please check your email to verify your account.",
+            Token = null, // No token until verified
+            User = null   // No user details either
         });
     }
 
@@ -118,7 +116,13 @@ public class AuthController : ControllerBase
             return Unauthorized(new AuthResponse { Success = false, Message = "Account deactivated" });
         }
 
-        // 4. Check malus points
+        // 4. Check verification
+        if (!user.IsVerified)
+        {
+            return Unauthorized(new AuthResponse { Success = false, Message = "Email not verified. Please check your inbox." });
+        }
+
+        // 5. Check malus points
         if (user.MalusPoints >= 20)
         {
             return Unauthorized(new AuthResponse { Success = false, Message = "Account suspended due to policy violations" });
@@ -143,6 +147,24 @@ public class AuthController : ControllerBase
                 MalusPoints = user.MalusPoints
             }
         });
+    }
+
+    /// <summary>
+    /// Verify email address
+    /// </summary>
+    [HttpGet("verify")]
+    [AllowAnonymous]
+    public async Task<ActionResult> VerifyEmail([FromQuery] string token)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.VerificationToken == token);
+        if (user == null)
+            return BadRequest(new { message = "Invalid or expired verification token." });
+
+        user.IsVerified = true;
+        user.VerificationToken = null; // Clear token
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Email verified successfully!" });
     }
 
     /// <summary>
@@ -231,6 +253,7 @@ public record RegisterRequest
     public string Password { get; init; } = string.Empty;
     public string FullName { get; init; } = string.Empty;
     public string? UserType { get; init; } = "Renter"; // Owner or Renter
+    public string? CountryCode { get; init; } = "GN";
 }
 
 public record LoginRequest

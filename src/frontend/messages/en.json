@@ -45,7 +45,14 @@
         "dontHaveAccount": "Don't have an account?",
         "loginLink": "Login",
         "registerLink": "Register",
-        "successRegister": "Account created successfully!",
+        "successRegister": "Account created! Please check your email.",
+        "checkEmailTitle": "Check your email",
+        "checkEmailDesc": "We've sent a confirmation link to your email address. Please click it to activate your account.",
+        "backToLogin": "Back to Login",
+        "verifying": "Verifying...",
+        "verifiedTitle": "Email Verified!",
+        "verifiedDesc": "Your account is now active. You can log in.",
+        "verifiedError": "Invalid or expired link.",
         "successLogin": "Login successful!"
     },
     "Listing": {

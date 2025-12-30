@@ -79,7 +79,10 @@ public class VehiclesController : ControllerBase
                 IsChauffeurAvailable = v.IsChauffeurAvailable,
                 ChauffeurDailyFee = v.ChauffeurDailyFee,
                 CityName = v.LocationCity.CityName,
-                OwnerName = v.Owner.FullName
+                OwnerName = v.Owner.FullName,
+                PrimaryPhotoUrl = v.Photos.OrderBy(p => p.DisplayOrder).Select(p => p.PhotoURL).FirstOrDefault(),
+                AverageRating = null,
+                TripCount = 0
             })
             .ToListAsync();
 
@@ -316,6 +319,9 @@ public record VehicleSearchResult
     public decimal? ChauffeurDailyFee { get; init; }
     public string CityName { get; init; } = string.Empty;
     public string OwnerName { get; init; } = string.Empty;
+    public string? PrimaryPhotoUrl { get; init; }
+    public decimal? AverageRating { get; init; }
+    public int TripCount { get; init; }
 }
 
 public record VehicleDetailResult : VehicleSearchResult

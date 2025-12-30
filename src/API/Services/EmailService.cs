@@ -12,6 +12,7 @@ public interface IEmailService
     Task SendBookingConfirmedAsync(string renterEmail, string renterName, string vehicleName, string ownerName, DateTime startDate, DateTime endDate);
     Task SendBookingCancelledAsync(string recipientEmail, string recipientName, string vehicleName, string bookingRef);
     Task SendPaymentConfirmedAsync(string renterEmail, string renterName, string vehicleName, string bookingRef, string paymentType);
+    Task SendWelcomeEmailAsync(string email, string name, string verificationLink);
 }
 
 public class EmailService : IEmailService
@@ -111,6 +112,28 @@ public class EmailService : IEmailService
 </html>";
 
         await SendEmailAsync(renterEmail, subject, body);
+    }
+
+    public async Task SendWelcomeEmailAsync(string email, string name, string verificationLink)
+    {
+        var subject = "👋 Bienvenue sur G-MoP - Vérifiez votre email";
+        var body = $@"
+<html>
+<body style='font-family: sans-serif; max-width: 600px; margin: 0 auto;'>
+    <h1 style='color: #1e1b4b;'>Bienvenue sur G-MoP!</h1>
+    <p>Bonjour {name},</p>
+    <p>Merci de vous être inscrit sur la première plateforme d'autopartage en Guinée.</p>
+    <p>Pour activer votre compte et commencer à louer des véhicules, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous:</p>
+    <a href='{verificationLink}' style='display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 16px 0;'>Confirmer mon email</a>
+    <p>Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur:</p>
+    <p style='color: #64748b; font-size: 12px;'>{verificationLink}</p>
+    <p style='color: #64748b; font-size: 12px; margin-top: 32px;'>G-MoP - La plateforme de location de véhicules en Guinée</p>
+</body>
+</html>";
+
+        _logger.LogInformation("📧 Sending Welcome Email to {Email}. Link: {Link}", email, verificationLink);
+
+        await SendEmailAsync(email, subject, body);
     }
 
     private async Task SendEmailAsync(string to, string subject, string htmlBody)

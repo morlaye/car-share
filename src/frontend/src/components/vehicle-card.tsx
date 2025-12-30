@@ -14,6 +14,8 @@ interface VehicleCardProps {
     isChauffeurAvailable: boolean;
     cityName: string;
     imageUrl?: string;
+    rating?: number;
+    tripCount?: number;
 }
 
 export function VehicleCard({
@@ -26,6 +28,8 @@ export function VehicleCard({
     isChauffeurAvailable,
     cityName,
     imageUrl,
+    rating,
+    tripCount,
 }: VehicleCardProps) {
     const t = useTranslations('VehicleCard');
     const displayImage = imageUrl || "https://placehold.co/600x400/f1f5f9/1e1b4b?text=G-MoP";
@@ -36,6 +40,10 @@ export function VehicleCard({
         currency: currencyCode || 'GNF',
         maximumFractionDigits: 0,
     });
+
+    // Format rating display
+    const displayRating = rating ? rating.toFixed(1) : null;
+    const displayTrips = tripCount && tripCount > 0 ? `(${tripCount} ${tripCount === 1 ? 'voyage' : 'voyages'})` : '(Nouveau)';
 
     return (
         <Card className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
@@ -64,7 +72,7 @@ export function VehicleCard({
                         <span className="truncate">{cityName || "Conakry"}</span>
                         <span className="mx-2">•</span>
                         <span className="flex items-center text-amber-500">
-                            ★ 5.0 <span className="text-gray-400 ml-1 font-normal">(New)</span>
+                            ★ {displayRating || '5.0'} <span className="text-gray-400 ml-1 font-normal">{displayTrips}</span>
                         </span>
                     </div>
                 </div>

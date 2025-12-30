@@ -17,6 +17,7 @@ public class User
     public string UserType { get; set; } = "Renter"; // Owner, Renter, Manager
     public string PlanType { get; set; } = "Basic"; // Basic, Pro, Fleet
     public bool IsVerified { get; set; }
+    public string? VerificationToken { get; set; }
     public bool IsActive { get; set; } = true;
     public int MalusPoints { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -81,6 +82,7 @@ public class Vehicle
     public ICollection<VehicleDocument> Documents { get; set; } = new List<VehicleDocument>();
     public ICollection<VehiclePhoto> Photos { get; set; } = new List<VehiclePhoto>();
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
 }
 
 /// <summary>

@@ -6,9 +6,8 @@ import { VehicleCard } from "@/components/vehicle-card";
 import { SearchBar, SearchParams } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { toast } from "sonner";
-import { components } from "@/lib/schema";
 import { useTranslations } from 'next-intl';
+import { components } from "@/lib/schema";
 
 // Use generated type from Contract
 type VehicleSearchResult = components["schemas"]["VehicleSearchResult"];
@@ -19,37 +18,16 @@ interface City {
 }
 
 export default function Home() {
-  const tNav = useTranslations('Navigation');
   const tHero = useTranslations('Hero');
   const tHome = useTranslations('Home');
 
   const [vehicles, setVehicles] = useState<VehicleSearchResult[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState<SearchParams>({});
 
-  // Check auth + Fetch vehicles and cities on mount
+  // Fetch vehicles and cities on mount
   useEffect(() => {
-    // Check for token
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsLoggedIn(true);
-      // Try to get user profile
-      api.get("/api/auth/me")
-        .then(res => {
-          setUserName(res.data.fullName || res.data.email);
-        })
-        .catch(() => {
-          // Token invalid, clear it
-          localStorage.removeItem("token");
-          setIsLoggedIn(false);
-        });
-    }
-
-    // Fetch cities and vehicles in parallel
     Promise.all([
       api.get<City[]>("/api/cities").catch(() => ({ data: [] })),
       fetchVehicles()
@@ -81,78 +59,8 @@ export default function Home() {
     fetchVehicles(params);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    setUserName(null);
-    window.location.reload();
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Navbar - Glassmorphism */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-white/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-primary tracking-tight">
-            G-MoP
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex text-sm font-medium text-slate-600 gap-4 mr-4">
-              <a href="/fr" className="hover:text-primary-action transition-colors">FR</a>
-              <span className="text-slate-300">|</span>
-              <a href="/en" className="hover:text-primary-action transition-colors">EN</a>
-            </div>
-
-            {isLoggedIn ? (
-              <>
-                {/* User Dropdown Menu */}
-                <div className="relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 text-sm text-slate-600 hover:text-primary px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
-                  >
-                    <span className="hidden md:inline">👋 {userName || "User"}</span>
-                    <svg className={`w-4 h-4 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-50">
-                      <Link href="/dashboard" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        📊 Dashboard
-                      </Link>
-                      <Link href="/vehicles/new" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        🚗 {tNav('listCar')}
-                      </Link>
-                      <Link href="/admin" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        ⚙️ Admin
-                      </Link>
-                      <hr className="my-2 border-slate-100" />
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        🚪 Déconnexion
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost" className="text-slate-600 hover:text-primary hover:bg-slate-100">{tNav('login')}</Button>
-                </Link>
-                <Link href="/register">
-                  <Button className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-md hover:shadow-lg transition-all">{tNav('listCar')}</Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
+    <>
       {/* Hero Section - Gradient & Clean */}
       <section className="relative z-40 flex flex-col items-center justify-center pt-24 pb-32 text-center bg-gradient-to-b from-indigo-50/50 to-white overflow-visible">
         {/* Decorative blobs */}
@@ -176,7 +84,7 @@ export default function Home() {
       </section>
 
       {/* Featured / Results Section */}
-      <main className="container mx-auto px-4 py-16 flex-grow bg-white relative z-0 rounded-t-[3rem] shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)] -mt-10">
+      <div className="container mx-auto px-4 py-16 flex-grow bg-white relative z-0 rounded-t-[3rem] shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)] -mt-10">
         <div className="flex justify-between items-center mb-12">
           <div>
             <h2 className="text-2xl font-bold text-primary">{tHome('availableVehicles')}</h2>
@@ -224,6 +132,9 @@ export default function Home() {
                 currencyCode={vehicle.currencyCode || "GNF"}
                 isChauffeurAvailable={vehicle.isChauffeurAvailable || false}
                 cityName={vehicle.cityName || ""}
+                imageUrl={(vehicle as any).primaryPhotoUrl}
+                rating={(vehicle as any).averageRating}
+                tripCount={(vehicle as any).tripCount}
               />
             ))}
           </div>
@@ -252,7 +163,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Bento Grid Features (Only show if no search results or at bottom) */}
+        {/* Bento Grid Features */}
         {!searchFilters.cityId && vehicles.length < 5 && (
           <div className="mt-32">
             <h2 className="text-3xl font-bold text-primary text-center mb-14">Pourquoi G-MoP ?</h2>
@@ -276,14 +187,7 @@ export default function Home() {
           </div>
         )}
 
-      </main>
-
-      <footer className="bg-primary text-slate-300 py-12 border-t border-indigo-900/50 mt-auto">
-        <div className="container mx-auto px-4 text-center text-sm">
-          <p className="font-medium text-white mb-2">G-MoP</p>
-          <p>&copy; {new Date().getFullYear()} Guinea Mobility Platform. Conçu à Conakry.</p>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </>
   );
 }

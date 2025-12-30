@@ -33,6 +33,10 @@
         "passwordLabel": "Mot de passe",
         "confirmPasswordLabel": "Confirmer mot de passe",
         "fullNameLabel": "Nom Complet",
+        "firstNameLabel": "Prénom",
+        "lastNameLabel": "Nom",
+        "termsAgreement": "J'accepte les conditions d'utilisation et la politique de confidentialité.",
+        "promotionsAgreement": "Envoyez-moi des promotions et des annonces par email.",
         "phoneLabel": "Téléphone",
         "iWantToLabel": "Je veux",
         "renterOption": "Louer une voiture",
@@ -45,7 +49,14 @@
         "dontHaveAccount": "Pas encore de compte ?",
         "loginLink": "Se connecter",
         "registerLink": "S'inscrire",
-        "successRegister": "Compte créé avec succès !",
+        "successRegister": "Compte créé ! Veuillez vérifier votre email.",
+        "checkEmailTitle": "Vérifiez votre email",
+        "checkEmailDesc": "Un lien de confirmation a été envoyé à votre adresse email. Veuillez cliquer dessus pour activer votre compte.",
+        "backToLogin": "Retour à la connexion",
+        "verifying": "Vérification en cours...",
+        "verifiedTitle": "Email Vérifié !",
+        "verifiedDesc": "Votre compte est maintenant actif. Vous pouvez vous connecter.",
+        "verifiedError": "Lien invalide ou expiré.",
         "successLogin": "Connexion réussie !"
     },
     "Listing": {
@@ -138,6 +149,7 @@
         "required": "Requis",
         "email": "Veuillez entrer une adresse email valide.",
         "minChar": "Doit comporter au moins {min} caractères.",
-        "passwordMismatch": "Les mots de passe ne correspondent pas"
+        "passwordMismatch": "Les mots de passe ne correspondent pas",
+        "termsRequired": "Vous devez accepter les conditions."
     }
 }
