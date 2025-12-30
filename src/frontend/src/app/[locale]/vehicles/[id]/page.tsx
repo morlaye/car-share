@@ -227,9 +227,11 @@ export default function VehicleDetailPage() {
                                 </div>
 
                                 {/* CTA */}
-                                <Button className="w-full bg-primary-action hover:bg-primary-action/90 text-white text-lg py-6 rounded-xl">
-                                    Réserver ce véhicule
-                                </Button>
+                                <Link href={`/book/${vehicle.vehicleID}`}>
+                                    <Button className="w-full bg-primary-action hover:bg-primary-action/90 text-white text-lg py-6 rounded-xl">
+                                        Réserver ce véhicule
+                                    </Button>
+                                </Link>
 
                                 <p className="text-xs text-center text-slate-400">
                                     Vous ne serez pas débité maintenant

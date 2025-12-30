@@ -87,9 +87,14 @@ export default function Home() {
 
             {isLoggedIn ? (
               <>
-                <span className="text-sm text-slate-600 hidden md:block">
+                <Link href="/dashboard" className="text-sm text-slate-600 hidden md:block hover:text-primary">
                   👋 {userName || "User"}
-                </span>
+                </Link>
+                <Link href="/dashboard">
+                  <Button variant="ghost" className="text-slate-600 hover:text-primary">
+                    Dashboard
+                  </Button>
+                </Link>
                 <Link href="/vehicles/new">
                   <Button className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-md hover:shadow-lg transition-all">
                     {tNav('listCar')}

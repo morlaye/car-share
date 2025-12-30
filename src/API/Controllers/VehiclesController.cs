@@ -144,6 +144,40 @@ public class VehiclesController : ControllerBase
 
         return Ok(cities);
     }
+
+    /// <summary>
+    /// Get vehicles owned by current user
+    /// </summary>
+    [HttpGet("my-vehicles")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<MyVehicleResult>>> GetMyVehicles()
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var vehicles = await _context.Vehicles
+            .Include(v => v.LocationCity)
+            .Where(v => v.OwnerID == userId)
+            .OrderByDescending(v => v.CreatedAt)
+            .Select(v => new MyVehicleResult
+            {
+                VehicleID = v.VehicleID,
+                Make = v.Make,
+                Model = v.Model,
+                Year = v.Year,
+                BaseDailyRate = v.BaseDailyRate,
+                CurrencyCode = v.CurrencyCode,
+                ListingStatus = v.ListingStatus,
+                CityName = v.LocationCity.CityName
+            })
+            .ToListAsync();
+
+        return Ok(vehicles);
+    }
+
     /// <summary>
     /// List a new vehicle (Owner)
     /// </summary>
@@ -296,4 +330,16 @@ public record CityResult
     public int CityID { get; init; }
     public string CityName { get; init; } = string.Empty;
     public string CountryCode { get; init; } = string.Empty;
+}
+
+public record MyVehicleResult
+{
+    public Guid VehicleID { get; init; }
+    public string Make { get; init; } = string.Empty;
+    public string Model { get; init; } = string.Empty;
+    public int Year { get; init; }
+    public decimal BaseDailyRate { get; init; }
+    public string CurrencyCode { get; init; } = string.Empty;
+    public string ListingStatus { get; init; } = string.Empty;
+    public string CityName { get; init; } = string.Empty;
 }
