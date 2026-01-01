@@ -1,38 +1,76 @@
 # CLAUDE.md
-## Instructions for AI Assistants Working on G-MoP
 
----
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
 **G-MoP (Guinea Mobility Platform)** is a peer-to-peer car-sharing marketplace for Guinea, connecting vehicle owners with renters (NGOs, mining companies, government agencies, diaspora, individuals).
 
-**Key Characteristics:**
 - **Team Size:** 3 people (Founder, Ops Manager, Developer)
 - **Stage:** Early startup, pre-launch
 - **Market:** Conakry, Guinea (French-speaking)
 - **Model:** Platform is a facilitator only — does NOT own vehicles
 
-**Tech Stack:**
+## Build & Development Commands
+
+### Frontend (Next.js 15)
+```bash
+cd src/frontend
+npm run dev          # Start dev server (http://localhost:3000)
+npm run build        # Production build
+npm run lint         # ESLint check
+npm run generate-api # Generate TypeScript types from Swagger (requires API running)
+```
+
+### Backend (.NET 10)
+```bash
+cd src/API
+dotnet build                    # Compile project
+dotnet run                      # Run dev server (https://localhost:5000)
+dotnet ef migrations add <Name> # Create new EF migration
+dotnet ef database update       # Apply migrations
+```
+
+### Development Prerequisites
+- API must be running on `localhost:5000` before running `npm run generate-api`
+- SQL Server must be accessible at the connection string in `appsettings.Development.json`
+
+## Tech Stack
+
 | Layer | Technology |
 |-------|------------|
-| Frontend | Next.js 15, TypeScript, Tailwind CSS, shadcn/ui |
-| Backend | ASP.NET Core 10 LTS (C#) |
+| Frontend | Next.js 15, TypeScript, Tailwind CSS v4, shadcn/ui |
+| Backend | ASP.NET Core 10 LTS (C#), Entity Framework Core 10 |
 | Database | SQL Server 2025 Enterprise |
-| Deployment | Coolify (self-hosted PaaS) |
-| CDN | Cloudflare (free tier) |
-| Payments | Stripe Connect (future) |
+| Auth | JWT Bearer tokens |
+| Deployment | Coolify (self-hosted PaaS), Cloudflare CDN |
 
-**Infrastructure:**
-- Dev: Windows 11 Pro + Hyper-V (SQL Server VM + Ubuntu/Coolify VM)
-- Prod: Hetzner VPS + Cloudflare
+## Architecture
 
----
+### Backend Structure (src/API/)
+- **Controllers/** - API endpoints (Auth, Vehicles, Bookings, Reviews, Admin)
+- **Models/Entities.cs** - All 11 domain entities (User, Vehicle, Booking, Review, etc.)
+- **Data/GMoPDbContext.cs** - EF Core context with fluent configuration
+- **Services/** - Business logic services (EmailService, etc.)
+
+### Frontend Structure (src/frontend/)
+- **src/app/[locale]/** - Next.js App Router with i18n (en, fr)
+- **src/components/ui/** - shadcn/ui primitives (button, input, card, etc.)
+- **src/components/** - Domain components (SearchBar, VehicleCard, Header, Footer)
+- **src/lib/api.ts** - Axios instance with JWT interceptor
+- **src/lib/schema.d.ts** - Auto-generated OpenAPI types
+- **messages/** - Translation files (en.json, fr.json)
+
+### Key API Endpoints
+- `POST /api/auth/register`, `/login`, `/verify` - Authentication
+- `GET/POST /api/vehicles` - Vehicle search and creation
+- `GET /api/vehicles/{id}` - Vehicle details with reviews
+- `POST /api/bookings` - Create booking request
+- `POST /api/reviews` - Submit review after booking
 
 ## Coding Style Rules
 
-### Backend (.NET/C#)
-
+### Backend (C#)
 1. **Comments in French** for business logic:
    ```csharp
    // Vérifier si le véhicule a tous les 4 documents valides
@@ -48,124 +86,24 @@
    public async Task<IActionResult> CreateBooking(...)
    ```
 
-3. **Always use:**
-   - Parameterized queries (never raw SQL)
-   - FluentValidation for input validation
-   - Dependency injection
-   - Repository pattern for data access
-   - `[Authorize]` on all controllers except explicitly public endpoints
+3. **Naming:** PascalCase (public), _camelCase (private fields), Async suffix for async methods
 
-4. **Naming conventions:**
-   - PascalCase for public members
-   - _camelCase for private fields
-   - Async suffix for async methods
+4. **Always use:** Parameterized queries, FluentValidation, dependency injection, `[Authorize]` on protected endpoints
 
-### Frontend (Next.js/TypeScript)
-
+### Frontend (TypeScript/React)
 1. Use App Router (not Pages Router)
-2. Server Components by default, Client Components only when needed
+2. Server Components by default, Client Components only when needed (`"use client"`)
 3. Tailwind CSS for styling (no inline styles)
 4. Use shadcn/ui components where available
+5. Forms: React Hook Form + Zod validation
 
 ### SQL Server
-
 1. Stored procedures for complex business logic
 2. Use REGEXP_LIKE for pattern matching (SQL 2025 feature)
 3. Ledger tables for Bookings and Penalties
 4. JSON type for flexible attributes (not NVARCHAR)
 
----
-
-## File Structure Expectations
-
-```
-GMoP/
-├── docs/
-│   ├── carshare_plan.md       # Business plan
-│   └── carshare_deployment.md # Technical architecture
-├── src/
-│   ├── API/                   # .NET 10 Backend
-│   │   ├── Controllers/
-│   │   ├── Services/
-│   │   ├── Models/
-│   │   ├── Data/              # EF Core + Repository
-│   │   └── Validators/        # FluentValidation
-│   └── Frontend/              # Next.js 15
-│       ├── app/               # App Router
-│       ├── components/
-│       └── lib/
-├── sql/
-│   ├── schema.sql             # Database schema
-│   └── stored-procedures.sql  # Business logic SPs
-├── docker-compose.yml         # Coolify deployment
-└── CLAUDE.md                  # This file
-```
-
----
-
-## How Claude Should Respond
-
-### DO:
-- Ground recommendations in `carshare_plan.md` and `carshare_deployment.md`
-- Write production-ready code with error handling
-- Explain trade-offs for a 3-person team
-- Consider Guinea context (low bandwidth, French language, chauffeur culture)
-- Suggest simpler alternatives if a feature seems over-engineered
-- Use the confirmed tech stack (SQL Server, .NET, Next.js)
-
-### Response Format:
-1. **Brief explanation** of approach
-2. **Code** with French business logic comments
-3. **Security considerations** if applicable
-4. **Test suggestions** for critical paths
-
-### Example Good Response:
-```
-I'll create the vehicle compliance check endpoint.
-
-**Approach:** Call the existing `sp_CheckVehicleCompliance` stored procedure 
-and return a structured response.
-
-[Code block with implementation]
-
-**Security:** This endpoint requires `[Authorize(Policy = "CanListVehicles")]` 
-since only owners/managers should access it.
-
-**Tests:** Verify behavior when 0, 1, 3, and 4 documents are valid.
-```
-
----
-
-## Things Claude Should NOT Do
-
-### Technical:
-- ❌ Use Azure services (no Azure OpenAI, no Azure hosting)
-- ❌ Add AI/ML features (no vector search, no embeddings)
-- ❌ Suggest PostgreSQL, MongoDB, or other databases
-- ❌ Recommend serverless (AWS Lambda, Azure Functions)
-- ❌ Over-engineer for scale (we have 50 vehicles, not 50,000)
-
-### Architectural:
-- ❌ Create microservices (monolith is intentional)
-- ❌ Add Kubernetes/complex orchestration
-- ❌ Suggest native mobile apps (PWA only for now)
-- ❌ Build features not in the phased plan
-
-### Business Logic:
-- ❌ Skip the 4-document compliance gate
-- ❌ Allow instant booking (all bookings need approval)
-- ❌ Ignore the malus point system
-- ❌ Remove platform liability disclaimers
-
-### Process:
-- ❌ Make changes without explaining rationale
-- ❌ Assume features from Turo/competitors apply here
-- ❌ Forget this is a 3-person team with limited capacity
-- ❌ Write comments in English for business logic (use French)
-
----
-
-## Quick Reference
+## Business Logic Rules (DO NOT SKIP)
 
 | Concept | Implementation |
 |---------|----------------|
@@ -174,47 +112,36 @@ since only owners/managers should access it.
 | Malus | 10+ points = restricted, 20+ points = banned |
 | Off-platform | Detect phone/email in messages, flag for review |
 | Payments | Manual first → Stripe Connect later |
-| Deployment | Coolify (dev) → Hetzner + Cloudflare (prod) |
+| Bookings | All bookings need approval (no instant booking) |
 
----
+## Things NOT to Do
 
-## Context7 MCP (Recommended)
+### Technical
+- Use Azure services, AI/ML features, or suggest alternative databases
+- Recommend serverless (AWS Lambda, Azure Functions)
+- Over-engineer for scale (we have 50 vehicles, not 50,000)
 
-Use **Context7** to get up-to-date documentation for the tech stack.
+### Architectural
+- Create microservices (monolith is intentional)
+- Add Kubernetes/complex orchestration
+- Suggest native mobile apps (PWA only for now)
 
-### How to Use
+### Business Logic
+- Skip the 4-document compliance gate
+- Allow instant booking
+- Ignore the malus point system
+- Write comments in English for business logic (use French)
 
-Add `use context7` to prompts when working with libraries:
+## Key Reference Files
 
-```
-Create a booking endpoint with JWT auth in .NET 10. Use context7.
-```
+- `carshare_plan.md` - Business plan and market analysis
+- `carshare_deployment.md` - Technical architecture and deployment
+- `sql/schema.sql` - Database schema
+- `sql/stored-procedures.sql` - Business logic stored procedures
 
-### Useful For
+## Guinea Context Considerations
 
-| Library | Why |
-|---------|-----|
-| ASP.NET Core 10 | Get Minimal APIs patterns, not old MVC |
-| Next.js 15 | Get App Router, not Pages Router |
-| SQL Server 2025 | Get REGEXP_LIKE, JSON type syntax |
-| Tailwind CSS | Avoid deprecated classes |
-| shadcn/ui | Get current component APIs |
-
-### Installation (Claude Desktop)
-
-Add to `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
-    }
-  }
-}
-```
-
----
-
-*Last updated: December 2025*
+- Low bandwidth environment - keep API responses lean, minimize image sizes
+- French is the default language
+- Chauffeur-driven rentals are common (cultural preference)
+- Target users: B2B first (mining, NGOs), then B2C expansion
